@@ -1,0 +1,12 @@
+rgbsub = rossubscriber('/camera/color/image_raw/compressed');
+pause(1);
+image_h = imshow(readImage(rgbsub.LatestMessage));
+
+tic
+while 1
+    image_h = readImage(rgbsub.LatestMessage);
+    drawnow;
+    pause
+    clf;
+    toc;
+end

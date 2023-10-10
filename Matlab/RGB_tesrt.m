@@ -1,0 +1,14 @@
+rgbsub = rospointMsg = pointsSub.LatestMessage;
+% pointMsg.PreserveStructureOnRead = true;
+% cloudPlot_h = scatter3(pointMsg,'Parent',gca);
+% drawnow();subscriber('/camera/color/image_raw');
+pause(1);
+% image_h = imshow(readImage(rgbsub.LatestMessage));
+
+tic
+while 1
+    % image_h = readImage(rgbsub.LatestMessage);
+    image_h = imshow(readImage(rgbsub.LatestMessage));
+    drawnow;
+    toc;
+end

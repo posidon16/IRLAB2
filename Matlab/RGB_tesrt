@@ -1,0 +1,3 @@
+rgbsub = rossubscriber('/camera/color/image_color');
+pause(1);
+image_h = imshow(readImage(rgbsub));
