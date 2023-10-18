@@ -1,0 +1,19 @@
+clear all
+clc
+clf
+
+pointsSub = rossubscriber('/camera/depth/color/points');
+
+pause(5);
+ 
+% while 1
+
+pointMsg = pointsSub.LatestMessage;
+% pointMsg.PreserveStructureOnRead = false;  %true
+cloudPlot_h = scatter3(pointMsg,'Parent',gca);
+xlim([-0.8 0.6]);
+ylim([-0.3 0.3]);
+zlim([0 2]);
+
+drawnow();
+% end
