@@ -1,0 +1,77 @@
+%% Michael Larkham Official Release 3
+
+%% READ ME:
+% To run this code you first need to install the arduino hardware support
+% package. To get it, go to 'Home' --> 'Environment' --> 'Add-Ons' --> 
+% 'Get Hardware Support Packages' and search for 'MATLAB Support Package
+% for Arduino Hardware'.
+
+
+%% THE CODE:
+% Clear previous and initalise new instance of arduino connection
+clear
+clc
+a = arduino('Com8', 'uno', 'Libraries', 'Ultrasonic'); % specify the serial-com port and arduino board
+
+ultrasonicObj = ultrasonic(a, 'A0', 'A1');
+
+% Define the intial button state
+goButtonState = false;
+haltButtonState = false;
+e_halt = true;
+lastGoValue = false;
+lastHaltValue = false;
+% goState = 0;
+
+% Initialize variables for debounce filtering
+lastGoButtonState = 0;    % Previous state of the button
+lastHaltButtonState = 0;    % Previous state of the button
+
+% Main loop
+while 1
+    goValue = readDigitalPin(a, "D12"); % read the go button signal
+    haltValue = readDigitalPin(a, "D13"); % read the go button signal
+    distance = readDistance(ultrasonicObj);
+
+    % checking if E_halt button has been pressed
+    if haltValue ~= haltButtonState && lastHaltValue == false % if pressed AND was not already in e_halt mode
+        e_halt = false; % get out of e_halt mode
+    else
+        e_halt = true; % stay in e_halt mode
+    end
+
+    % checking if both buttons are pressed at once.
+    if goValue == 0 && haltValue == 0
+        e_halt = false; % get out of e_halt mode
+    end
+
+    if distance < 0.1
+        e_halt = true;
+    end
+
+
+    if e_halt == true
+        % goButtonState = true; % go button becomes false
+        writeDigitalPin(a, 'D2', 1) % turn the green LED off
+        writeDigitalPin(a, 'D3', 0) % turn the red LED on
+    % elseif e_halt == false && goValue ~= lastGoButtonState
+    %     if goState == 0
+    %         goValue = ~goValue; % go button becomes false
+    %         writeDigitalPin(a, 'D2', 1) % turn the green LED off
+    %         writeDigitalPin(a, 'D3', 1) % turn the red LED off
+    %     elseif goState == 1
+    %         goValue = ~goValue; % go button becomes false
+    %         writeDigitalPin(a, 'D2', 1) % turn the green LED off
+    %         writeDigitalPin(a, 'D3', 1) % turn the red LED off
+    %     end
+    else
+        writeDigitalPin(a, 'D2', 0) % turn the green LED on
+        writeDigitalPin(a, 'D3', 1) % turn the red LED off
+    end
+
+
+   lastHaltValue = e_halt; % records e_halt value
+   lastGoButtonState = goValue; % records go value
+   lastHaltButtonState = haltValue; % records halt value
+   pause(0.1) % Delay 0.1 seconds before repeating the loop
+end
