@@ -1,0 +1,30 @@
+clc
+clear
+
+a = arduino('Com6', 'Uno', 'Libraries', 'Ultrasonic');
+
+ultrasonicObj = ultrasonic(a, 'A0', 'A1');
+
+while 1
+    distance = readDistance(ultrasonicObj);
+    rand
+    pause(0.1)
+
+    i = 1;
+
+    if distance < 0.1
+        while 1
+            distance = readDistance(ultrasonicObj);
+            if i == 1
+                disp("Too Close")
+               i = i + 1; 
+            end
+            
+            if distance > 0.1
+                break
+            end
+        end
+    else
+        continue
+    end
+end
