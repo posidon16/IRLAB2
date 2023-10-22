@@ -14,7 +14,7 @@ classdef Mitsubishi < RobotBaseClass
 %% Constructor
         function self = Mitsubishi(baseTr)
                 self.CreateModel();
-                self.homeQ = [0,0,pi/2,0,0];
+                self.homeQ = [0,0,pi/2,0,0,0];
                 if nargin < 1			
 				    baseTr = eye(4);
                 end
@@ -32,7 +32,8 @@ classdef Mitsubishi < RobotBaseClass
               link(2) = Link('d',0, 'a',0.23,  'alpha',0,      'offset',0,     'qlim',deg2rad([-30 210]));
               link(3) = Link('d',0, 'a',0.05,  'alpha',-pi/2,  'offset',0,     'qlim',deg2rad([-70 90]));
               link(4) = Link('d',-0.27, 'a',0,  'alpha',-pi/2,  'offset',0,     'qlim',deg2rad([-200,200]));
-              link(5) = Link('d',0,    'a',0,   'alpha',0,      'offset',0,         'qlim',deg2rad([-120,120]));
+              link(5) = Link('d',0,    'a',0,   'alpha',-pi/2,      'offset',0,         'qlim',deg2rad([-120,120]));
+              link(6) = Link('d',0.077,    'a',0,   'alpha',0,      'offset',0,         'qlim',deg2rad([-360,360]));
 
 
 
