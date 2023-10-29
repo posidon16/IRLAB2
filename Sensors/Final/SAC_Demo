@@ -1,0 +1,344 @@
+classdef SAC_Demo
+    properties
+        I
+        q
+    end
+
+    methods (Static)
+        function initialise_Dobot()
+            safetyStatusSubscriber = rossubscriber('/dobot_magician/safety_status');
+            pause(2); %Allow some time for MATLAB to start the subscriber
+            currentSafetyStatus = safetyStatusSubscriber.LatestMessage.Data;
+            
+            [safetyStatePublisher,safetyStateMsg] = rospublisher('/dobot_magician/target_safety_status');
+            safetyStateMsg.Data = 2;
+            send(safetyStatePublisher,safetyStateMsg);
+        end
+
+        function home_Dobot()
+            jointTarget = [0,0,0,0]; % Remember that the Dobot has 4 joints by default.
+
+            [targetJointTrajPub,targetJointTrajMsg] = rospublisher('/dobot_magician/target_joint_states');
+            trajectoryPoint = rosmessage("trajectory_msgs/JointTrajectoryPoint");
+            trajectoryPoint.Positions = jointTarget;
+            targetJointTrajMsg.Points = trajectoryPoint;
+            
+            send(targetJointTrajPub,targetJointTrajMsg);
+        end
+
+        function [BW, maskedRGBImage] = create_Mask_Blue_Brick(RGB)
+            %createMask  Threshold RGB image using auto-generated code from colorThresholder app.
+            %  [BW,MASKEDRGBIMAGE] = createMask(RGB) thresholds image RGB using
+            %  auto-generated code from the colorThresholder app. The colorspace and
+            %  range for each channel of the colorspace were set within the app. The
+            %  segmentation mask is returned in BW, and a composite of the mask and
+            %  original RGB images is returned in maskedRGBImage.
+            
+            % Convert RGB image to chosen color space
+            I = RGB;
+            
+            % Define thresholds for channel 1 based on histogram settings
+            channel1Min = 0.000;
+            channel1Max = 34.000;
+            
+            % Define thresholds for channel 2 based on histogram settings
+            channel2Min = 93.000;
+            channel2Max = 255.000;
+            
+            % Define thresholds for channel 3 based on histogram settings
+            channel3Min = 0.000;
+            channel3Max = 255.000;
+            
+            % Create mask based on chosen histogram thresholds
+            sliderBW = (I(:,:,1) >= channel1Min ) & (I(:,:,1) <= channel1Max) & ...
+                (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max) & ...
+                (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+            BW = sliderBW;
+            
+            % Initialize output masked image based on input image.
+            maskedRGBImage = RGB;
+            
+            % Set background pixels where BW is false to zero.
+            maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
+        end
+
+        function [BW, maskedRGBImage] = create_Mask_Green_Brick(RGB)
+            %createMask  Threshold RGB image using auto-generated code from colorThresholder app.
+            %  [BW,MASKEDRGBIMAGE] = createMask(RGB) thresholds image RGB using
+            %  auto-generated code from the colorThresholder app. The colorspace and
+            %  range for each channel of the colorspace were set within the app. The
+            %  segmentation mask is returned in BW, and a composite of the mask and
+            %  original RGB images is returned in maskedRGBImage.
+            
+            % Convert RGB image to chosen color space
+            I = RGB;
+            
+            % Define thresholds for channel 1 based on histogram settings
+            channel1Min = 0.000;
+            channel1Max = 24.000;
+            
+            % Define thresholds for channel 2 based on histogram settings
+            channel2Min = 53.000;
+            channel2Max = 199.000;
+            
+            % Define thresholds for channel 3 based on histogram settings
+            channel3Min = 0.000;
+            channel3Max = 65.000;
+            
+            % Create mask based on chosen histogram thresholds
+            sliderBW = (I(:,:,1) >= channel1Min ) & (I(:,:,1) <= channel1Max) & ...
+                (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max) & ...
+                (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+            BW = sliderBW;
+            
+            % Initialize output masked image based on input image.
+            maskedRGBImage = RGB;
+            
+            % Set background pixels where BW is false to zero.
+            maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
+        end
+
+        function [BW, maskedRGBImage] = create_Mask_Red_Brick(RGB)
+            %createMask  Threshold RGB image using auto-generated code from colorThresholder app.
+            %  [BW,MASKEDRGBIMAGE] = createMask(RGB) thresholds image RGB using
+            %  auto-generated code from the colorThresholder app. The colorspace and
+            %  range for each channel of the colorspace were set within the app. The
+            %  segmentation mask is returned in BW, and a composite of the mask and
+            %  original RGB images is returned in maskedRGBImage.
+            
+            % Convert RGB image to chosen color space
+            I = RGB;
+            
+            % Define thresholds for channel 1 based on histogram settings
+            channel1Min = 96.000;
+            channel1Max = 226.000;
+            
+            % Define thresholds for channel 2 based on histogram settings
+            channel2Min = 00.000;
+            channel2Max = 53.000;
+            
+            % Define thresholds for channel 3 based on histogram settings
+            channel3Min = 0.000;
+            channel3Max = 49.000;
+            
+            % Create mask based on chosen histogram thresholds
+            sliderBW = (I(:,:,1) >= channel1Min ) & (I(:,:,1) <= channel1Max) & ...
+                (I(:,:,2) >= channel2Min ) & (I(:,:,2) <= channel2Max) & ...
+                (I(:,:,3) >= channel3Min ) & (I(:,:,3) <= channel3Max);
+            BW = sliderBW;
+            
+            % Initialize output masked image based on input image.
+            maskedRGBImage = RGB;
+            
+            % Set background pixels where BW is false to zero.
+            maskedRGBImage(repmat(~BW,[1 1 3])) = 0;
+        end
+        
+        function execution()
+            clear all
+            clf
+            clc
+
+            SAC_Demo.initialise_Dobot()
+
+            SAC_Demo.home_Dobot()
+
+            SAC_Demo.mask_images()
+
+            SAC_Demo.calculate_Waypoints()
+
+            SAC_Demo.move_Dobot()
+
+            SAC_Demo.home_Dobot()
+
+        end
+    end
+
+    methods
+        function [zRed, zBlue, zGreen, xRed,xBlue, xGreen] = mask_images(I)
+            % Subscribe and read image from camera
+            I = rossubscriber("/camera/color/image_raw");
+            RGB_Image = readImage(I.receive());
+            pause(5) % delay to allow time for ros-topics to update
+            
+            % Mask Each Image
+            redBrick = createMaskRedBrick(RGB_Image);
+            blueBrick = createMaskBlueBrick(RGB_Image);
+            greenBrick = createMaskGreenBrick(RGB_Image);
+
+            % show red masked image
+            figure(1)
+            imshow(redBrick);
+
+            % show green masked image
+            figure(2)
+            imshow(greenBrick);  
+            
+            % show blue masked image
+            figure(3)
+            imshow(blueBrick);
+            
+            % find centroid of each brick
+            stats = regionprops(redBrick,"Centroid", "Area");
+            bats = regionprops(greenBrick,"Centroid", "Area");
+            mats = regionprops(blueBrick,"Centroid", "Area");
+            
+            % calcuate the area of each brick
+            redArea = [stats.Area];
+            greenArea = [bats.Area];
+            blueArea = [mats.Area];
+            
+            [redMaxArea, redIndex] = max(redArea);  % redMaxArea used for indexing of centroid
+            [greenMaxArea, greenIndex] = max(greenArea);
+            [blueMaxArea, blueIndex] = max(blueArea);
+            
+            redCentroid = stats(redIndex).Centroid;
+            greenCentroid = bats(greenIndex).Centroid;
+            blueCentroid = mats(blueIndex).Centroid;
+            
+            depthSub = rossubscriber('/camera/aligned_depth_to_color/image_raw');
+            depthMsg = readImage(depthSub.receive());
+            pause(5);
+            
+            px = 500;  % distance from robot outwards
+            % Principlan x (From the dobot, how highj the cam is)
+            py = 0; % distance left or right
+            
+            % Preinitalise coordinate variable
+            zRed = 0;
+            zBlue = 0;
+            zGreen = 0;
+            xRed = 0;
+            xBlue = 0;
+            xGreen = 0;
+            
+            
+            % Focal lengths of camera in x and y
+            fx = 606.8311157226562;
+            fy = 606.0000610351562;
+            
+            ixRed = double(redCentroid(1,1)); 
+            iyRed = double(redCentroid(1,2));
+            
+            
+            zRed = double(depthMsg(redIndex)/ 2.64583);
+            xRed = (ixRed - px) * zRed / fx;
+            yRed = (iyRed - py) * zRed / fy;
+            
+            ixGreen = double(greenCentroid(1,1));
+            iyGreen = double(greenCentroid(1,2));
+            
+            
+            zGreen = double(depthMsg(greenIndex)/2.64583);
+            xGreen = (ixGreen - px) * zGreen / fx;
+            yGreen = (iyGreen - py) * zGreen / fy;
+            
+            ixBlue = double(blueCentroid(1,1)); 
+            iyBlue = double(blueCentroid(1,2));
+            
+            
+            zBlue = double(depthMsg(blueIndex)/2.64583);
+            xBlue = (ixBlue - px) * zBlue / fx;
+            yBlue = (iyBlue - py) * zBlue / fy;
+            
+            % Covert from mm to m
+            zRed = zRed/1000;
+            zBlue = zBlue/1000;
+            zGreen = zGreen/1000;
+
+            % Covert from mm to m
+            % Adding offsets to accound for camera distortion
+            xRed = xRed/-1000 - 0.09;
+            xBlue = xBlue/-1000 - 0.081;
+            xGreen = xGreen/-1000 -0.084;
+        end
+        
+        function [q] = calculate_Waypoints(zRed, zBlue, zGreen, xRed,xBlue, xGreen)
+            % Define the waypoints of the robot
+            RedPickupGround = [zRed xRed -0.03040483856201172]; 
+            GreenPickupGround = [zBlue xBlue -0.03040483856201172]; 
+            BluePickupGround = [zGreen xGreen -0.03040483856201172];
+            PickupLift = [0.2467842559814453 0.01960359001159668 0.09542754364013672];
+            RedLift = [0.08017970275878906 0.2341857604980469 0.09966698455810546];
+            RedDrop = [0.08640805053710937 0.2908858947753906 -0.02506934890747071];
+            GreenLift = [0.2035739288330078 -0.2281324615478516 0.09625828552246093];
+            GreenDrop = [0.1974341735839844 -0.2147364807128906 -0.03001092529296875];
+            BlueLift = [-0.01237137222290039 -0.2940900573730469 0.1293307952880859];
+            BlueDrop = [0.01036699390411377 -0.3115442810058594 -0.0322947883605957];
+            GreenAbove =[0.2467842559814453  -0.06 0.09542754364013672];
+            
+            % Define the motions of the red brick
+            q{1} = RedPickupGround;
+            q{2} = PickupLift;
+            q{3} = RedLift;
+            q{4} = RedDrop;
+            q{5} = RedLift;
+            q{6} = PickupLift;
+            
+            % Define the motions of the green brick
+            q{7} = GreenAbove;
+            q{8} = GreenPickupGround;
+            q{9} = GreenAbove;
+            q{10} = GreenLift;
+            q{11} = GreenDrop;
+            q{12} = GreenLift;
+            q{13} = PickupLift;
+            
+            % Define the motions of the blue brick
+            q{14} = BluePickupGround;
+            q{15} = PickupLift;
+            q{16} = GreenLift;
+            q{17} = BlueLift;
+            q{18} = BlueDrop;
+            q{19} = BlueLift;
+            q{20} = GreenLift; 
+            q{21} = PickupLift;
+        end
+
+        function move_Dobot(q)
+            for i = 1:21
+                endEffectorPosition = q{i}; 
+                endEffectorRotation = [0,0,0];
+                
+                [targetEndEffectorPub,targetEndEffectorMsg] = rospublisher('/dobot_magician/target_end_effector_pose');
+                
+                targetEndEffectorMsg.Position.X = endEffectorPosition(1);
+                targetEndEffectorMsg.Position.Y = endEffectorPosition(2);
+                targetEndEffectorMsg.Position.Z = endEffectorPosition(3);
+                
+                qua = eul2quat(endEffectorRotation);
+                targetEndEffectorMsg.Orientation.W = qua(1);
+                targetEndEffectorMsg.Orientation.X = qua(2);
+                targetEndEffectorMsg.Orientation.Y = qua(3);
+                targetEndEffectorMsg.Orientation.Z = qua(4);
+                
+                send(targetEndEffectorPub,targetEndEffectorMsg);
+                disp(i)
+                pause(5)
+                
+                switch i
+                    case {1, 8, 14}
+                        [toolStatePub, toolStateMsg] = rospublisher('/dobot_magician/target_tool_state');
+                        toolStateMsg.Data = [1 1];
+                        send(toolStatePub,toolStateMsg);
+                        pause(1)
+                    
+                
+                    case{4, 11, 18}
+                        [toolStatePub, toolStateMsg] = rospublisher('/dobot_magician/target_tool_state');
+                        toolStateMsg.Data = [1 0];
+                        send(toolStatePub,toolStateMsg);
+                        pause(1)
+                
+                    case{21}
+                        [toolStatePub, toolStateMsg] = rospublisher('/dobot_magician/target_tool_state');
+                        toolStateMsg.Data = [0 0];
+                        send(toolStatePub,toolStateMsg);  
+                end
+            end
+        end
+
+
+    
+    end
+end
