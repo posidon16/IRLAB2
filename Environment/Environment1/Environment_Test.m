@@ -7,6 +7,7 @@ view(120,30);
 camlight(0,15);
 hold on
 
+%test
 PlaceObject('Cafe_Counter7.ply', [0.5, -0.8, 0.1]);
 PlaceObject('Cafe_Back_Counter5.ply', [-1.2, -0.2, 0.1]);
 PlaceObject('Cafe_Counter_Middle3.PLY',[0.5,-0.8,0.1]);
