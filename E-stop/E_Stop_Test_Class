@@ -1,0 +1,107 @@
+classdef E_Stop_Test_Class
+    properties
+        % Declare all the objects used in this class
+        Arduino
+        UltrasonicSensor
+        Robot
+        q
+    end
+
+    methods (Static)
+        function execution()
+            % Clear all previous data
+            clear all
+            clf
+            clc
+
+            % Create instance of contructor function
+            operation = E_Stop_Test_Class;
+
+            % Main robot movement loop fucntion
+            operation.runTrajectories();
+        end
+    end
+    
+    methods
+        function obj = E_Stop_Test_Class() % Constructor function
+
+            % Define all the objects
+            obj.Arduino = arduino('Com9', 'uno', 'Libraries', 'Ultrasonic');
+            obj.UltrasonicSensor = ultrasonic(obj.Arduino, 'A0', 'A1');
+            obj.Robot = UR3;
+
+            % Create the q-matrix of robot waypoints
+            obj.q{1} = [pi/6,-pi/3,0,0,0,0];
+            obj.q{2} = [pi/4, -pi/2, 0, 0, 0, 0];
+            obj.q{3} = [pi/2, -pi/2, 0, 0, pi/2, 0];
+            obj.q{4} = [pi, -pi/3, pi/6, 0, pi/2, 0];
+            obj.q{5} = [pi, -pi/2, 0, 0, pi/2, 0];
+            obj.q{6} = [pi/2, -pi/3, 0, pi/4, pi/2, 0];
+            obj.q{7} = [0, -pi/2, 0, 0, pi/2, 0];
+            obj.q{8} = [0, -pi/4, 0, 0, pi/4, 0];
+            obj.q{9} = [0, -pi/4, 0, 0, 0, 0];
+            obj.q{10} = [0,0,0,0,0,0];
+        end
+        
+        function runTrajectories(obj) % Main robot movement loop fucntion
+
+            % Initialise the status variable for the toggle switch
+            status = false;
+
+            % Main robot movement loop
+            for i = 1:width(obj.q)
+
+                % Calculate the joint trajectory between q matrix points
+                newQ = obj.q{i};
+                jointTrajectory = jtraj(obj.Robot.model.getpos(), newQ, 30);
+
+                % What happens in every step of a movement
+                for trajStep = 1:size(jointTrajectory, 1)
+
+                    % Read the halt button and ultrasonic sensor
+                    haltButtonState = readDigitalPin(obj.Arduino, "D13");
+                    distance = readDistance(obj.UltrasonicSensor);
+                    
+                    % if distance is too close or halt button is pressed
+                    if haltButtonState == 0
+                        disp("Emergency Halt Button Pressed");
+                        status = ~status;
+                    elseif distance < 0.1
+                        status = ~status;
+                        disp("Distance too close / Light curtain tripped");
+                    end
+                    
+                    % What happens if the robot is running normally
+                    if status == 1
+                        writeDigitalPin(obj.Arduino, 'D3', 1); % Show status on LED
+                        writeDigitalPin(obj.Arduino, 'D2', 0); % Show status on LED
+                        obj.Robot.model.animate(jointTrajectory(trajStep, :));
+                        drawnow();
+                        disp("Running as normal");
+
+                    % What happens if e-stop is activated    
+                    else 
+                        disp("E-stop is active");
+                        writeDigitalPin(obj.Arduino, 'D3', 0); % Show status on LED
+                        writeDigitalPin(obj.Arduino, 'D2', 1); % Show status on LED
+
+                        % Checking function to get out of e-stop
+                        while 1
+                            % Read the halt button and ultrasonic sensor
+                            goButtonState = readDigitalPin(obj.Arduino, "D12");
+                            haltButtonState = readDigitalPin(obj.Arduino, "D13");
+
+                            % if both buttons are pressed at once
+                            if goButtonState == 0 && haltButtonState == 0
+                                disp("E-stop has been deactivated");
+                                status = ~status;
+                                pause(0.3) % Debouncer
+                                break % Return to Main robot movement loop
+                            end
+                        end
+                    end                            
+                end
+            end
+        end
+    end
+end
