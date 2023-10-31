@@ -1,0 +1,68 @@
+clear all
+clf
+clc
+
+a = arduino('Com6', 'uno', 'Libraries', 'Ultrasonic'); % specify the serial-com port and arduino board
+ultrasonicObj = ultrasonic(a, 'A0', 'A1');
+
+r = UR3;
+
+q{1} = [pi/6,-pi/3,0,0,0,0];
+q{2} = [pi/4, -pi/2, 0, 0, 0, 0];
+q{3} = [pi/2, -pi/2, 0, 0, pi/2, 0];
+q{4} = [pi, -pi/3, pi/6, 0, pi/2, 0];
+q{5} = [pi, -pi/2, 0, 0, pi/2, 0];
+q{6} = [pi/2, -pi/3, 0, pi/4, pi/2, 0];
+q{7} = [0, -pi/2, 0, 0, pi/2, 0];
+q{8} = [0, -pi/4, 0, 0, pi/4, 0];
+q{9} = [0, -pi/4, 0, 0, 0, 0];
+q{10} = [0,0,0,0,0,0];
+
+
+% Initialize the status variable
+status = false;
+previousGoButtonState = true;
+previousHaltButtonState = true;
+
+for i = 1:width(q)
+    newQ = q{i};
+    jointTrajectory = jtraj(r.model.getpos(), newQ, 30);
+    for trajStep = 1:size(jointTrajectory, 1)
+        haltButtonState = readDigitalPin(a, "D13");
+        distance = readDistance(ultrasonicObj);
+    
+        if haltButtonState == 0
+            disp("Emergency Halt Button Pressed");
+            status = ~status; % Toggle the status variable
+            writeDigitalPin(a, 'D2', status); % Show status on LED
+        elseif distance < 0.1
+            status = ~status; % Toggle the status variable
+            writeDigitalPin(a, 'D2', status); % Show status on LED
+            disp("Distance too close / Light curtain tripped");
+        end
+   
+        previousHaltButtonState = haltButtonState;
+
+        if status == 1
+            writeDigitalPin(a, 'D3', 1); % Show status on LED
+            writeDigitalPin(a, 'D2', 0); % Show status on LED
+            r.model.animate(jointTrajectory(trajStep, :));
+            drawnow();
+            disp("Running as normal");
+            pause(0.05);
+        else
+            disp("E-stop is active");
+            writeDigitalPin(a, 'D3', 0); % Show status on LED
+            writeDigitalPin(a, 'D2', 1); % Show status on LED
+            while 1
+                goButtonState = readDigitalPin(a, "D12");
+                haltButtonState = readDigitalPin(a, "D13");
+                if goButtonState == 0 && haltButtonState == 0
+                   disp("E-stop has been deactivated");
+                   break
+                end
+            end
+        end
+    end
+end
+
