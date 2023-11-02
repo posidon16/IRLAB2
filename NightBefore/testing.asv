@@ -1,0 +1,13 @@
+
+
+Es = 0;
+
+
+
+while true
+Es = getfield(testing,Es);
+Es
+
+
+pause(0.5);
+end

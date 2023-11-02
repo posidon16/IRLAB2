@@ -185,14 +185,14 @@ classdef combinedClass1
                             elseif distance < 0.1
                                 status = ~status;
                                 disp("Distance too close / Light curtain tripped");
-                            elseif obj.Es == 1
+                            elseif obj.Es.Es == 1
                                 disp("Emergency Halt Button Pressed");
                                 status = 0
 
                             end
                             
                             % What happens if the robot is running normally
-                            if status == 1 && obj.Es == 0
+                            if status == 1 && obj.Es.Es == 0
                                 writeDigitalPin(obj.Arduino, 'D3', 1); % Show status on LED
                                 writeDigitalPin(obj.Arduino, 'D2', 0); % Show status on LED
                                 obj.s.model.animate(jointTrajectory_s(trajStep, :));
@@ -209,7 +209,7 @@ classdef combinedClass1
         
                                 drawnow();
                                 disp("Running as normal");
-                                obj.Es
+                                obj.Es.Es
         
                             % What happens if e-stop is activated    
                             else 
@@ -224,7 +224,7 @@ classdef combinedClass1
                                     haltButtonState = readDigitalPin(obj.Arduino, "D13");
         
                                     % if both buttons are pressed at once
-                                    if (goButtonState == 0 && haltButtonState == 0) || obj.Es == 0
+                                    if (goButtonState == 0 && haltButtonState == 0) || obj.Es.Es == 0
                                         disp("E-stop has been deactivated");
                                         status = ~status;
                                         pause(0.3) % Debouncer
