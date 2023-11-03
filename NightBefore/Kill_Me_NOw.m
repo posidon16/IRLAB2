@@ -4,7 +4,7 @@ clc
 hold on
 
 %% Create Robots:
-a = arduino('Com6', 'uno', 'Libraries', 'Ultrasonic');
+a = arduino('/dev/tty.usbserial-21230', 'uno', 'Libraries', 'Ultrasonic');
 UltrasonicSensor = ultrasonic(a, 'A0', 'A1');
 s = DobotMagician;
 r = Mitsubishi;
