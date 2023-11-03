@@ -4,11 +4,13 @@ clc
 hold on
 
 %% Create Robots:
-a = arduino('Com6', 'uno', 'Libraries', 'Ultrasonic');
+a = arduino('/dev/tty.usbserial-21230', 'uno', 'Libraries', 'Ultrasonic');
 UltrasonicSensor = ultrasonic(a, 'A0', 'A1');
 s = DobotMagician;
 r = Mitsubishi;
 g = DobotGripper;
+runSimulationObj = RunSimulation();
+Es = runSimulationObj.Es;
 
 % Plot Dobot in position
 Dobot_Transform = transl(-1.6, 0.3, 1.25) * rpy2tr(0,0,0);
@@ -273,6 +275,7 @@ for j = 1 :3
        
         % What happens in every step of a movement
         for trajStep = 1:size(jointTrajectory_s, 1)
+            Es = runSimulationObj.Es;
     
             % Update Dobot gripper location
             pos = s.model.getpos;                   % get pos of UR3
@@ -286,7 +289,7 @@ for j = 1 :3
                     distance = readDistance(UltrasonicSensor);
                     
                     % if distance is too close or halt button is pressed
-                    if haltButtonState == 0
+                    if haltButtonState == 0 || Es == 1
                         disp("Emergency Halt Button Pressed");
                         status = ~status;
                     elseif distance < 0.1
@@ -295,7 +298,7 @@ for j = 1 :3
                     end
                     
                     % What happens if the robot is running normally
-                    if status == 1
+                    if status == 1 && Es == 0
                         writeDigitalPin(a, 'D3', 1); % Show status on LED
                         writeDigitalPin(a, 'D2', 0); % Show status on LED
                         s.model.animate(jointTrajectory_s(trajStep, :));
@@ -320,15 +323,17 @@ for j = 1 :3
     
                         % Checking function to get out of e-stop
                         while 1
+                            Es = runSimulationObj.Es;
                             % Read the halt button and ultrasonic sensor
                             goButtonState = readDigitalPin(a, "D12");
                             haltButtonState = readDigitalPin(a, "D13");
     
                             % if both buttons are pressed at once
-                            if goButtonState == 0 && haltButtonState == 0
+                            if (goButtonState == 0 && haltButtonState == 0)|| Es == 0
                                 disp("E-stop has been deactivated");
                                 status = ~status;
                                 pause(0.3) % Debouncer
+                                Es = 0;
                                 break % Return to Main robot movement loop
                             end
                         end
@@ -468,4 +473,3 @@ for qIndex = 1:size(qMatrix,1)
     end
 end
 end
-
