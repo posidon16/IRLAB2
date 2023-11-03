@@ -109,11 +109,11 @@ q_s_blue{14} = q_s_blue{1};
 q_s_blue{15} = q_s_blue{1};
 
 % Create the q-matrix of Mitsubishi waypoints
-q_r_blue{1} = r.model.ikcon(transl(-1.379, 0.6, 1.579)*rpy2tr(-pi/2,-pi/2,-pi/2), [ 3.1416   -0.0419    1.5704    0   -0.0419    0]);
-q_r_blue{2} = r.model.ikcon(transl(-0.8, 1.181, 1.539)*rpy2tr(-pi/2,-pi/2,0), [pi/2   -0.0314    1.4033         0   -0.2094         0]);
+q_r_blue{1} = r.model.ikcon(transl(-0.8, 0.882, 1.504)*rpy2tr(-pi/2,-pi/2,0), [ pi/2   1.1248   -0.9130    0   -1.3589   0]);
+q_r_blue{2} = r.model.ikcon(transl(-0.8, 0.915, 1.385)*rpy2tr(-pi/2,-pi/2,0), [pi/2    0.5027   -0.5515         0   -1.5708         0]);
 q_r_blue{3} = r.model.ikcon(transl(-0.8, 1.130, 1.364)*rpy2tr(-pi/2,-pi/2,0), [pi/2   -0.1257    0.9006         0   -0.8029         0]);
-q_r_blue{4} = r.model.ikcon(transl(-0.8, 0.915, 1.385)*rpy2tr(-pi/2,-pi/2,0), [pi/2    0.5027   -0.5515         0   -1.5708         0]);
-q_r_blue{5} = r.model.ikcon(transl(-0.8, 0.882, 1.504)*rpy2tr(-pi/2,-pi/2,0), [ pi/2   1.1248   -0.9130    0   -1.3589   0]);
+q_r_blue{4} = r.model.ikcon(transl(-0.8, 1.181, 1.539)*rpy2tr(-pi/2,-pi/2,0), [pi/2   -0.0314    1.4033         0   -0.2094         0]);
+q_r_blue{5} = r.model.ikcon(transl(-1.379, 0.6, 1.579)*rpy2tr(-pi/2,-pi/2,-pi/2), [ 3.1416   -0.0419    1.5704    0   -0.0419    0]);
 q_r_blue{6} = r.model.ikcon(transl(-1.342, 0.6, 1.36)*rpy2tr(-pi/2,-pi/2,-pi/2), [3.1416   -0.4887    1.5708    0   -0.5027         0]); 
 q_r_blue{7} = q_r_blue{6}; % loading red muffins
 q_r_blue{8} = q_r_blue{6};
@@ -123,9 +123,7 @@ q_r_blue{11} = q_r_blue{5}; % return red tray to
 q_r_blue{12} = q_r_blue{4};
 q_r_blue{13} = q_r_blue{3};
 q_r_blue{14} = q_r_blue{2}; % pull out spatula from red tray
-q_r_blue{15} = r.model.ikcon(transl(-0.518, 0.6, 1.504)*rpy2tr(-pi/2,-pi/2,-pi/2), [0    1.1310   -0.9146         0   -1.3404         0]); 
-
-
+q_r_blue{15} = q_r_blue{1};
 
 %% Define the green q_Matrix
 % NOTE: BOTH Q-MATRICES SHOULD BE THE SAME SIZE TO RUN PROPERLY
@@ -220,11 +218,14 @@ for j = 1 :3
             muffinVerts = get(blueMuffin, 'Vertices');
             
             trayLoc = transl(-1.36,-1.4,-0.525)*rpy2tr(0,pi/2,0);
-            muffinLoc = transl(1.5, 0.01, -1.395)*rpy2tr(0,0,0);
+            muffinLoc = transl(1.4, 0.01, -1.395)*rpy2tr(0,0,0);
             muffinFinalLoc = transl(-1.32,-0.03,-1.14)*rpy2tr(0,pi/2,0);
         case 3
             q_s = q_s_green;
             q_r = q_r_green;
+
+            colourTray = greenTray;
+            colourMuffin = greenMuffin;
 
             robot_pos = [r.model.getpos]; 
             r.model.fkine(robot_pos)
@@ -235,7 +236,7 @@ for j = 1 :3
             muffinVerts = get(greenMuffin, 'Vertices');
 
             trayLoc = transl(-1.375,-0.713,-0.70)*rpy2tr(pi/2,pi/4,pi/2);
-            muffinLoc = transl(1.4, 0.01, -1.395)*rpy2tr(0,0,0);
+            muffinLoc = transl(1.5, 0.01, -1.395)*rpy2tr(0,0,0);
             muffinFinalLoc = transl(-1.32,-0.03,-1.24)*rpy2tr(0,pi/2,0);
     end
 
