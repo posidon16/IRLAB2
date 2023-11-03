@@ -1,13 +1,16 @@
 
 
-Es = 0;
+%Es = 0;
 
+runSimulationObj = RunSimulation();
 
 
 while true
-Es(1)
+Es = runSimulationObj.Es;
+Es
 
-propListener = addlistener(Es,'PostSet',@(src,evnt)disp('Color changed'));
+
+
 
 pause(0.5);
 end

@@ -12,7 +12,7 @@ classdef combinedClass1
     end
 
     properties (Access = public)
-        Es = 0;
+        %Es = 0;
         
     end
 
@@ -150,6 +150,7 @@ classdef combinedClass1
             robot_pos = [obj.r.model.getpos]; 
             obj.r.model.fkine(robot_pos)
             verts = get(redTray, 'Vertices');
+            runSimulationObj = RunSimulation();
 
             % Main robot movement loop
             for i = 1:width(obj.q_s)
@@ -165,6 +166,9 @@ classdef combinedClass1
                
                 % What happens in every step of a movement
                 for trajStep = 1:size(jointTrajectory_s, 1)
+                    
+
+                    Es = runSimulationObj.Es;
 
                     % Update Dobot gripper location
                     pos = obj.s.model.getpos;                   % get pos of UR3
@@ -179,20 +183,20 @@ classdef combinedClass1
                             distance = readDistance(obj.UltrasonicSensor);
                             
                             % if distance is too close or halt button is pressed
-                            if haltButtonState == 0 
+                            if haltButtonState == 0 || Es == 1
                                 disp("Emergency Halt Button Pressed");
                                 status = ~status;
                             elseif distance < 0.1
                                 status = ~status;
                                 disp("Distance too close / Light curtain tripped");
-                            elseif obj.Es == 1
-                                disp("Emergency Halt Button Pressed");
-                                status = 0
+                            % elseif Es == 1
+                            %     disp("Emergency Halt Button Pressed");
+                            %     status = 0
 
                             end
                             
                             % What happens if the robot is running normally
-                            if status == 1 && obj.Es == 0
+                            if status == 1 && Es == 0
                                 writeDigitalPin(obj.Arduino, 'D3', 1); % Show status on LED
                                 writeDigitalPin(obj.Arduino, 'D2', 0); % Show status on LED
                                 obj.s.model.animate(jointTrajectory_s(trajStep, :));
@@ -209,7 +213,7 @@ classdef combinedClass1
         
                                 drawnow();
                                 disp("Running as normal");
-                                obj.Es
+                                Es
         
                             % What happens if e-stop is activated    
                             else 
@@ -219,12 +223,15 @@ classdef combinedClass1
         
                                 % Checking function to get out of e-stop
                                 while 1
+                                    Es = runSimulationObj.Es;
                                     % Read the halt button and ultrasonic sensor
                                     goButtonState = readDigitalPin(obj.Arduino, "D12");
                                     haltButtonState = readDigitalPin(obj.Arduino, "D13");
+
+                                    Es
         
                                     % if both buttons are pressed at once
-                                    if (goButtonState == 0 && haltButtonState == 0) || obj.Es == 0
+                                    if  Es == 0%(goButtonState == 0 && haltButtonState == 0) 
                                         disp("E-stop has been deactivated");
                                         status = ~status;
                                         pause(0.3) % Debouncer
