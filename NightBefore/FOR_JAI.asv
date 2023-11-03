@@ -174,7 +174,7 @@ blueTray = PlaceObject('Food_Tray_Blue2.PLY',[-0.8,1.4,1.3]);
 redMuffin = PlaceObject('Red_muffin.PLY',[-1.6, -0.01, 1.29]);
 blueMuffin = PlaceObject('Blue_muffin.PLY',[-1.5, -0.01, 1.29]);
 greenMuffin = PlaceObject('Green_muffin.PLY',[-1.4, -0.01, 1.29]);
-chef = PlaceObject('Human_with_Chefs_hat.PLY',[1,-1.5,0]);
+chef = PlaceObject('Chef3.PLY',[1,-1.5,0]);
 
 
 % Initialise the status variable for the toggle switch
@@ -278,7 +278,6 @@ for j = 1 :3
                     if haltButtonState == 0 || Es == 1
                         disp("Emergency Halt Button Pressed");
                         status = ~status;
-                        Es = 1;
                     elseif distance < 0.1
                         status = ~status;
                         disp("Distance too close / Light curtain tripped");
@@ -316,9 +315,8 @@ for j = 1 :3
                             haltButtonState = readDigitalPin(a, "D13");
     
                             % if both buttons are pressed at once
-                            if (goButtonState == 0 && haltButtonState == 0) || Es == 0
+                            if (goButtonState == 0 && haltButtonState == 0) || Es == 
                                 disp("E-stop has been deactivated");
-                                Es = 0;
                                 status = ~status;
                                 pause(0.3) % Debouncer
                                 break % Return to Main robot movement loop

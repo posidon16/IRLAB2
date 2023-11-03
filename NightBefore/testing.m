@@ -3,6 +3,7 @@
 %Es = 0;
 
 runSimulationObj = RunSimulation();
+delete("RunSimulation.mlapp");
 
 
 while true
