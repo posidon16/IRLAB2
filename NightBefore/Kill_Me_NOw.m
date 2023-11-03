@@ -218,8 +218,8 @@ for j = 1 :3
             muffinVerts = get(blueMuffin, 'Vertices');
             
             trayLoc = transl(-1.36,-1.4,-0.525)*rpy2tr(0,pi/2,0);
-            muffinLoc = transl(1.4, 0.01, -1.395)*rpy2tr(0,0,0);
-            muffinFinalLoc = transl(-1.32,-0.03,-1.14)*rpy2tr(0,pi/2,0);
+            muffinLoc = transl(1.5, 0.01, -1.395)*rpy2tr(0,0,0);
+            muffinFinalLoc = transl(-1.32,-0.03,-1.24)*rpy2tr(0,pi/2,0);
         case 3
             q_s = q_s_green;
             q_r = q_r_green;
@@ -236,8 +236,8 @@ for j = 1 :3
             muffinVerts = get(greenMuffin, 'Vertices');
 
             trayLoc = transl(-1.375,-0.713,-0.70)*rpy2tr(pi/2,pi/4,pi/2);
-            muffinLoc = transl(1.5, 0.01, -1.395)*rpy2tr(0,0,0);
-            muffinFinalLoc = transl(-1.32,-0.03,-1.24)*rpy2tr(0,pi/2,0);
+            muffinLoc = transl(1.4, 0.01, -1.395)*rpy2tr(0,0,0);
+            muffinFinalLoc = transl(-1.32,-0.03,-1.14)*rpy2tr(0,pi/2,0);
     end
 
 
@@ -361,3 +361,96 @@ for j = 1 :3
         end
     end
 end                            
+
+
+
+q = zeros(1,6);                                                     % Create a vector of initial joint angles        
+                                      % Set the size of the workspace when drawing the robot
+r.model.plot(q);                  % Plot the robot
+
+robot_pos = r.model.getpos
+% 2.2 and 2.3
+centerpnt = [0.5,1,0];
+side = 1.5;
+plotOptions.plotFaces = true;
+[vertex,faces,faceNormals] = RectangularPrism(centerpnt-side/2, centerpnt+side/2,plotOptions);
+axis equal
+
+% pPoints = [1.25,0,-0.5 ...
+%         ;2,0.75,-0.5 ...
+%         ;2,-0.75,-0.5 ...
+%         ;2.75,0,-0.5];
+% pNormals = [-1,0,0 ...
+%             ; 0,1,0 ...
+%             ; 0,-1,0 ...
+%             ;1,0,0];
+r.model.teach;
+
+% 2.4: Get the transform of every joint (i.e. start and end of every link)
+tr = zeros(4,4,r.model.n+1);
+tr(:,:,1) = r.model.base;
+L = r.model.links;
+for i = 1 : r.model.n
+    tr(:,:,i+1) = tr(:,:,i) * trotz(q(i)+L(i).offset) * transl(0,0,L(i).d) * transl(L(i).a,0,0) * trotx(L(i).alpha);
+end
+
+% 2.5: Go through each link and also each triangle face
+for i = 1 : size(tr,3)-1    
+    for faceIndex = 1:size(faces,1)
+        vertOnPlane = vertex(faces(faceIndex,1)',:);
+        [intersectP,check] = LinePlaneIntersection(faceNormals(faceIndex,:),vertOnPlane,tr(1:3,4,i)',tr(1:3,4,i+1)'); 
+        if check == 1 && IsIntersectionPointInsideTriangle(intersectP,vertex(faces(faceIndex,:)',:))
+            plot3(intersectP(1),intersectP(2),intersectP(3),'g*');
+            display('Collision');
+        end
+    end    
+end
+
+% 2.6: Go through until there are no step sizes larger than 1 degree
+q1 = [-pi/4,0,pi/2,0,pi/2,0];
+q2 = [pi/4,0,pi/2,0,pi/2,0];
+steps = 2;
+while ~isempty(find(1 < abs(diff(rad2deg(jtraj(q1,q2,steps)))),1))
+    steps = steps + 1;
+end
+qMatrix = jtraj(q1,q2,steps);
+
+% 2.7
+result = true(steps,1);
+for i = 1: steps
+    result(i) = IsCollision(r,qMatrix(i,:),faces,vertex,faceNormals,false);
+    r.model.animate(qMatrix(i,:));
+end
+
+
+
+
+
+function result = IsCollision(r,qMatrix,faces,vertex,faceNormals,returnOnceFound)
+if nargin < 6
+    returnOnceFound = true;
+end
+result = false;
+
+for qIndex = 1:size(qMatrix,1)
+    % Get the transform of every joint (i.e. start and end of every link)
+    tr = GetLinkPoses(qMatrix(qIndex,:), r);
+
+    % Go through each link and also each triangle face
+    for i = 1 : size(tr,3)-1    
+        for faceIndex = 1:size(faces,1)
+            vertOnPlane = vertex(faces(faceIndex,1)',:);
+            [intersectP,check] = LinePlaneIntersection(faceNormals(faceIndex,:),vertOnPlane,tr(1:3,4,i)',tr(1:3,4,i+1)'); 
+            if check == 1 && IsIntersectionPointInsideTriangle(intersectP,vertex(faces(faceIndex,:)',:))
+                plot3(intersectP(1),intersectP(2),intersectP(3),'g*');
+                display('Collision');
+                result = true;
+                if returnOnceFound
+                    return
+                end
+            end
+        end    
+    end
+end
+end
+
