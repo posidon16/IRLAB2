@@ -125,6 +125,45 @@ q_r_blue{13} = q_r_blue{3};
 q_r_blue{14} = q_r_blue{2}; % pull out spatula from red tray
 q_r_blue{15} = r.model.ikcon(transl(-0.518, 0.6, 1.504)*rpy2tr(-pi/2,-pi/2,-pi/2), [0    1.1310   -0.9146         0   -1.3404         0]); 
 
+
+
+%% Define the green q_Matrix
+% NOTE: BOTH Q-MATRICES SHOULD BE THE SAME SIZE TO RUN PROPERLY
+% Create the q-matrix of Dobot waypoints
+q_s_green{1} = s.model.ikcon(transl(-1.600, 0.026, 1.517)*rpy2tr(0,0,pi/2), [-1.5708    0.5236    0.9809    1.6232]); 
+q_s_green{2} = s.model.ikcon(transl(-1.3, -0.009, 1.398)*rpy2tr(0,0,-pi/2), [-1.5708    1.0210    0.9809    1.1432]); 
+q_s_green{3} = q_s_green{1}; % holding first red muffin
+q_s_green{4} = q_s_green{1};
+q_s_green{5} = q_s_green{1};
+q_s_green{6} = q_s_green{1};
+q_s_green{7} = s.model.ikcon(transl(-1.600, 0.552, 1.539)*rpy2tr(0,0,pi/2), [1.5708    0.3534    1.0594    1.7279]);
+q_s_green{8} = s.model.ikcon(transl(-1.600, 0.562, 1.439)*rpy2tr(0,0,pi/2), [1.5709    0.5498    1.4835    1.0996]); 
+q_s_green{9} = s.model.ikcon(transl(-1.600, 0.552, 1.539)*rpy2tr(0,0,pi/2), [1.5708    0.3534    1.0594    1.7279]);
+q_s_green{10} = q_s_green{1};
+q_s_green{11} = q_s_green{1};
+q_s_green{12} = q_s_green{1};
+q_s_green{13} = q_s_green{1};
+q_s_green{14} = q_s_green{1};
+q_s_green{15} = q_s_green{1};
+
+% Create the q-matrix of Mitsubishi waypoints
+q_r_green{1} = r.model.ikcon(transl(-0.601, 0.799, 1.504)*rpy2tr(-pi/2,-pi/2,-pi/4), [ 0.7854    1.1248   -0.9130    0   -1.3589   0]);
+q_r_green{2} = r.model.ikcon(transl(-0.577, 0.823, 1.385)*rpy2tr(-pi/2,-pi/2,-pi/4), [0.7854    0.5027   -0.5515         0   -1.5708         0]);
+q_r_green{3} = r.model.ikcon(transl(-0.425, 0.975, 1.364)*rpy2tr(-pi/2,-pi/2,-pi/4), [0.7854   -0.1257    0.9006         0   -0.8029         0]);
+q_r_green{4} = r.model.ikcon(transl(-0.389, 1.011, 1.539)*rpy2tr(-pi/2,-pi/2,-pi/4), [0.7854   -0.0314    1.4033         0   -0.2094         0]);
+q_r_green{5} = r.model.ikcon(transl(-1.379, 0.6, 1.579)*rpy2tr(-pi/2,-pi/2,-pi/2), [ 3.1416   -0.0419    1.5704    0   -0.0419    0]);
+q_r_green{6} = r.model.ikcon(transl(-1.342, 0.6, 1.36)*rpy2tr(-pi/2,-pi/2,-pi/2), [3.1416   -0.4887    1.5708    0   -0.5027         0]); 
+q_r_green{7} = q_r_green{6}; % loading red muffins
+q_r_green{8} = q_r_green{6};
+q_r_green{9} = q_r_green{6};
+q_r_green{10} = q_r_green{6};
+q_r_green{11} = q_r_green{5}; % return red tray to 
+q_r_green{12} = q_r_green{4};
+q_r_green{13} = q_r_green{3};
+q_r_green{14} = q_r_green{2}; % pull out spatula from red tray
+q_r_green{15} = q_r_green{1};
+
+
 %% 
 
 % Spawn movable objects
@@ -164,6 +203,7 @@ for j = 1 :3
 
             trayLoc = transl(-1.36,-0.6,0.35)*rpy2tr(0,pi/2,0);
             muffinLoc = transl(1.6, 0.01, -1.395)*rpy2tr(0,0,0);
+            muffinFinalLoc = transl(-1.32,-0.03,-1.34)*rpy2tr(0,pi/2,0);
         case 2
             q_s = q_s_blue;
             q_r = q_r_blue;
@@ -181,6 +221,7 @@ for j = 1 :3
             
             trayLoc = transl(-1.36,-1.4,-0.525)*rpy2tr(0,pi/2,0);
             muffinLoc = transl(1.5, 0.01, -1.395)*rpy2tr(0,0,0);
+            muffinFinalLoc = transl(-1.32,-0.03,-1.14)*rpy2tr(0,pi/2,0);
         case 3
             q_s = q_s_green;
             q_r = q_r_green;
@@ -195,6 +236,7 @@ for j = 1 :3
 
             trayLoc = transl(-1.375,-0.713,-0.70)*rpy2tr(pi/2,pi/4,pi/2);
             muffinLoc = transl(1.4, 0.01, -1.395)*rpy2tr(0,0,0);
+            muffinFinalLoc = transl(-1.32,-0.03,-1.24)*rpy2tr(0,pi/2,0);
     end
 
 
@@ -284,16 +326,6 @@ for j = 1 :3
                             pos = s.model.getpos;                   
                             T = s.model.fkine(pos); 
 
-                            % if j == 1
-                            %     trayVertz = [verts,ones(size(verts,1),1)] * (T.T * transl(-1.36,-0.6,0.35)*rpy2tr(0,pi/2,0))';
-                            %     muffinTransform = [muffinVerts,ones(size(muffinVerts,1),1)] * (T.T * transl(1.6, 0.01, -1.395)*rpy2tr(0,0,0))';
-                            % elseif j == 2
-                            %     trayVertz = [verts,ones(size(verts,1),1)] * (T.T * transl(-1.36,-1.4,-0.525)*rpy2tr(0,pi/2,0))';
-                            %     muffinTransform = [muffinVerts,ones(size(muffinVerts,1),1)] * (T.T * transl(1.5, 0.01, -1.395)*rpy2tr(0,0,0))';
-                            % elseif j == 3
-                            %     trayVertz = [verts,ones(size(verts,1),1)] * (T.T * transl(-1.375,-0.713,-0.70)*rpy2tr(pi/2,pi/4,pi/2))';
-                            %     muffinTransform = [muffinVerts,ones(size(muffinVerts,1),1)] * (T.T * transl(1.4, 0.01, -1.395)*rpy2tr(0,0,0))';
-                            % end
 
                             g.model.base = T;                            
                             g.model.animate(g.model.getpos);                  
@@ -304,14 +336,6 @@ for j = 1 :3
                         case {4,5,6,7,8}
                             pos = r.model.getpos;
                             T = r.model.fkine(pos);
-
-                            % if j == 1
-                            %     trayLoc = transl(-1.36,-0.6,0.35)*rpy2tr(0,pi/2,0);
-                            % elseif j == 2
-                            %     trayLoc = transl(-1.36,-1.4,-0.525)*rpy2tr(0,pi/2,0);
-                            % elseif j == 3
-                            %     trayLoc = transl(-1.375,-0.713,-0.70)*rpy2tr(pi/2,pi/4,pi/2);
-                            % end
 
                             transformedVertices = [verts,ones(size(verts,1),1)] * (T.T * trayLoc)';
                             set(colourTray,'Vertices',transformedVertices(:,1:3));
@@ -327,20 +351,9 @@ for j = 1 :3
                             pos = r.model.getpos;                   
                             T = r.model.fkine(pos);
 
-                            % if j == 1
-                            %     trayVertz = [verts,ones(size(verts,1),1)] * (T.T * transl(-1.36,-0.6,0.35)*rpy2tr(0,pi/2,0))';
-                            %     muffinTransform = [muffinVerts,ones(size(muffinVerts,1),1)] * (T.T * transl(-1.32,-0.03,-1.34)*rpy2tr(0,pi/2,0))';
-                            % elseif j == 2
-                            %     trayVertz = [verts,ones(size(verts,1),1)] * (T.T * transl(-1.36,-1.4,-0.525)*rpy2tr(0,pi/2,0))'; 
-                            %     muffinTransform = [muffinVerts,ones(size(muffinVerts,1),1)] * (T.T * transl(-1.32,-0.03,-1.14)*rpy2tr(0,pi/2,0))';
-                            % elseif j == 3
-                            %     trayVertz = [verts,ones(size(verts,1),1)] * (T.T * transl(-1.375,-0.713,-0.70)*rpy2tr(pi/2,pi/4,pi/2))';
-                            %     muffinTransform = [muffinVerts,ones(size(muffinVerts,1),1)] * (T.T * transl(-1.32,-0.03,-1.24)*rpy2tr(0,pi/2,0))';
-                            % end
-
                             transformedVertices = [verts,ones(size(verts,1),1)] * (T.T * trayLoc)';  %
                             set(colourTray,'Vertices',transformedVertices(:,1:3));
-                            muffinTransform = [muffinVerts,ones(size(muffinVerts,1),1)] * (T.T * transl(-1.32,-0.03,-1.34)*rpy2tr(0,pi/2,0))';
+                            muffinTransform = [muffinVerts,ones(size(muffinVerts,1),1)] * (T.T * muffinFinalLoc)';
                             set(colourMuffin,'Vertices',muffinTransform(:,1:3))
                             drawnow();
                     end
