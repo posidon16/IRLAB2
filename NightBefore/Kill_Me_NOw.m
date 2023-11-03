@@ -4,13 +4,11 @@ clc
 hold on
 
 %% Create Robots:
-a = arduino('/dev/tty.usbserial-21230', 'uno', 'Libraries', 'Ultrasonic');
+a = arduino('Com6', 'uno', 'Libraries', 'Ultrasonic');
 UltrasonicSensor = ultrasonic(a, 'A0', 'A1');
 s = DobotMagician;
 r = Mitsubishi;
 g = DobotGripper;
-runSimulationObj = RunSimulation();
-Es = runSimulationObj.Es;
 
 % Plot Dobot in position
 Dobot_Transform = transl(-1.6, 0.3, 1.25) * rpy2tr(0,0,0);
@@ -183,6 +181,21 @@ status = false;
 % NOTE THIS MUST BE THE SAME FOR BOTH ROBOTS
 steps = 30;
 
+chef_x = 1;
+for movement = 1:10
+    delete(chef)
+    chef = PlaceObject('Chef3.PLY',[chef_x,-1.5,0]);
+    drawnow();
+    if chef_x < 0.4
+        disp("Person entering operating area, halt all operations")
+        input('Press enter to move away from kitchen')
+        delete(chef)
+        chef = PlaceObject('Chef3.PLY',[1,-1.5,0]);
+        break
+    end
+    chef_x = chef_x-0.1;
+end
+
 
 for j = 1 :3
     switch j
@@ -260,7 +273,6 @@ for j = 1 :3
        
         % What happens in every step of a movement
         for trajStep = 1:size(jointTrajectory_s, 1)
-            Es = runSimulationObj.Es;
     
             % Update Dobot gripper location
             pos = s.model.getpos;                   % get pos of UR3
@@ -274,7 +286,7 @@ for j = 1 :3
                     distance = readDistance(UltrasonicSensor);
                     
                     % if distance is too close or halt button is pressed
-                    if haltButtonState == 0 || Es == 1
+                    if haltButtonState == 0
                         disp("Emergency Halt Button Pressed");
                         status = ~status;
                     elseif distance < 0.1
@@ -283,7 +295,7 @@ for j = 1 :3
                     end
                     
                     % What happens if the robot is running normally
-                    if status == 1 && Es == 0
+                    if status == 1
                         writeDigitalPin(a, 'D3', 1); % Show status on LED
                         writeDigitalPin(a, 'D2', 0); % Show status on LED
                         s.model.animate(jointTrajectory_s(trajStep, :));
@@ -308,17 +320,15 @@ for j = 1 :3
     
                         % Checking function to get out of e-stop
                         while 1
-                            Es = runSimulationObj.Es;
                             % Read the halt button and ultrasonic sensor
                             goButtonState = readDigitalPin(a, "D12");
                             haltButtonState = readDigitalPin(a, "D13");
     
                             % if both buttons are pressed at once
-                            if (goButtonState == 0 && haltButtonState == 0)|| Es == 0
+                            if goButtonState == 0 && haltButtonState == 0
                                 disp("E-stop has been deactivated");
                                 status = ~status;
                                 pause(0.3) % Debouncer
-                                Es = 0;
                                 break % Return to Main robot movement loop
                             end
                         end
