@@ -1,4 +1,4 @@
-clear all
+clear all %#ok<CLALL> 
 clf
 clc
 hold on
@@ -125,6 +125,7 @@ q_r_blue{13} = q_r_blue{3};
 q_r_blue{14} = q_r_blue{2}; % pull out spatula from red tray
 q_r_blue{15} = q_r_blue{1};
 
+
 %% Define the green q_Matrix
 % NOTE: BOTH Q-MATRICES SHOULD BE THE SAME SIZE TO RUN PROPERLY
 % Create the q-matrix of Dobot waypoints
@@ -162,7 +163,7 @@ q_r_green{14} = q_r_green{2}; % pull out spatula from red tray
 q_r_green{15} = q_r_green{1};
 
 
-%% 
+%% Initialise Variables
 
 % Spawn movable objects
 redTray = PlaceObject('Food_Tray_Red2.PLY',[0.04,0.6,1.29]);
@@ -181,7 +182,23 @@ status = false;
 % NOTE THIS MUST BE THE SAME FOR BOTH ROBOTS
 steps = 30;
 
+%% Man enters trips light curtain
+chef_x = 1;
+for movement = 1:10
+    delete(chef)
+    chef = PlaceObject('Chef3.PLY',[chef_x,-1.5,0]);
+    drawnow();
+    if chef_x < 0.4
+        disp("Person entering operating area, halt all operations")
+        input('Press enter to move away from kitchen')
+        delete(chef)
+        chef = PlaceObject('Chef3.PLY',[1,-1.5,0]);
+        break
+    end
+    chef_x = chef_x-0.1;
+end
 
+%% Main Functional Loop
 for j = 1 :3
     switch j
         case 1
@@ -189,11 +206,11 @@ for j = 1 :3
             q_r = q_r_red;
 
             robot_pos = [r.model.getpos]; 
-            r.model.fkine(robot_pos)
+            r.model.fkine(robot_pos);
             verts = get(redTray, 'Vertices');
             
             robot_pos = [s.model.getpos]; 
-            s.model.fkine(robot_pos)
+            s.model.fkine(robot_pos);
             muffinVerts = get(redMuffin, 'Vertices');
 
             colourTray = redTray;
@@ -210,11 +227,11 @@ for j = 1 :3
             colourMuffin = blueMuffin;
 
             robot_pos = [r.model.getpos]; 
-            r.model.fkine(robot_pos)
+            r.model.fkine(robot_pos);
             verts = get(blueTray, 'Vertices');
             
             robot_pos = [s.model.getpos]; 
-            s.model.fkine(robot_pos)
+            s.model.fkine(robot_pos);
             muffinVerts = get(blueMuffin, 'Vertices');
             
             trayLoc = transl(-1.36,-1.4,-0.525)*rpy2tr(0,pi/2,0);
@@ -228,11 +245,11 @@ for j = 1 :3
             colourMuffin = greenMuffin;
 
             robot_pos = [r.model.getpos]; 
-            r.model.fkine(robot_pos)
+            r.model.fkine(robot_pos);
             verts = get(greenTray, 'Vertices');
             
             robot_pos = [s.model.getpos]; 
-            s.model.fkine(robot_pos)
+            s.model.fkine(robot_pos);
             muffinVerts = get(greenMuffin, 'Vertices');
 
             trayLoc = transl(-1.375,-0.713,-0.70)*rpy2tr(pi/2,pi/4,pi/2);
@@ -243,8 +260,6 @@ for j = 1 :3
 
     % Main robot movement loop
     for i = 1:width(q_s)
-        % iteration counter
-        disp(i);
         if i == 3 || 4 || 5 || 6
             qMatrixRedMuffin = jtraj(robot_pos,q_s{i},steps);
         end
@@ -326,8 +341,6 @@ for j = 1 :3
                         case 3
                             pos = s.model.getpos;                   
                             T = s.model.fkine(pos); 
-
-
                             g.model.base = T;                            
                             g.model.animate(g.model.getpos);                  
                             muffinTransform = [muffinVerts,ones(size(muffinVerts,1),1)] * (T.T * muffinLoc)';
@@ -337,7 +350,6 @@ for j = 1 :3
                         case {4,5,6,7,8}
                             pos = r.model.getpos;
                             T = r.model.fkine(pos);
-
                             transformedVertices = [verts,ones(size(verts,1),1)] * (T.T * trayLoc)';
                             set(colourTray,'Vertices',transformedVertices(:,1:3));
                             pos = s.model.getpos;                   
@@ -351,106 +363,16 @@ for j = 1 :3
                         case {11, 12, 13}
                             pos = r.model.getpos;                   
                             T = r.model.fkine(pos);
-
                             transformedVertices = [verts,ones(size(verts,1),1)] * (T.T * trayLoc)';  %
                             set(colourTray,'Vertices',transformedVertices(:,1:3));
                             muffinTransform = [muffinVerts,ones(size(muffinVerts,1),1)] * (T.T * muffinFinalLoc)';
                             set(colourMuffin,'Vertices',muffinTransform(:,1:3))
                             drawnow();
                     end
+
+                    
         end
     end
-end                            
+end      
 
-
-
-q = zeros(1,6);                                                     % Create a vector of initial joint angles        
-                                      % Set the size of the workspace when drawing the robot
-r.model.plot(q);                  % Plot the robot
-
-robot_pos = r.model.getpos
-% 2.2 and 2.3
-centerpnt = [0.5,1,0];
-side = 1.5;
-plotOptions.plotFaces = true;
-[vertex,faces,faceNormals] = RectangularPrism(centerpnt-side/2, centerpnt+side/2,plotOptions);
-axis equal
-
-% pPoints = [1.25,0,-0.5 ...
-%         ;2,0.75,-0.5 ...
-%         ;2,-0.75,-0.5 ...
-%         ;2.75,0,-0.5];
-% pNormals = [-1,0,0 ...
-%             ; 0,1,0 ...
-%             ; 0,-1,0 ...
-%             ;1,0,0];
-r.model.teach;
-
-% 2.4: Get the transform of every joint (i.e. start and end of every link)
-tr = zeros(4,4,r.model.n+1);
-tr(:,:,1) = r.model.base;
-L = r.model.links;
-for i = 1 : r.model.n
-    tr(:,:,i+1) = tr(:,:,i) * trotz(q(i)+L(i).offset) * transl(0,0,L(i).d) * transl(L(i).a,0,0) * trotx(L(i).alpha);
-end
-
-% 2.5: Go through each link and also each triangle face
-for i = 1 : size(tr,3)-1    
-    for faceIndex = 1:size(faces,1)
-        vertOnPlane = vertex(faces(faceIndex,1)',:);
-        [intersectP,check] = LinePlaneIntersection(faceNormals(faceIndex,:),vertOnPlane,tr(1:3,4,i)',tr(1:3,4,i+1)'); 
-        if check == 1 && IsIntersectionPointInsideTriangle(intersectP,vertex(faces(faceIndex,:)',:))
-            plot3(intersectP(1),intersectP(2),intersectP(3),'g*');
-            display('Collision');
-        end
-    end    
-end
-
-% 2.6: Go through until there are no step sizes larger than 1 degree
-q1 = [-pi/4,0,pi/2,0,pi/2,0];
-q2 = [pi/4,0,pi/2,0,pi/2,0];
-steps = 2;
-while ~isempty(find(1 < abs(diff(rad2deg(jtraj(q1,q2,steps)))),1))
-    steps = steps + 1;
-end
-qMatrix = jtraj(q1,q2,steps);
-
-% 2.7
-result = true(steps,1);
-for i = 1: steps
-    result(i) = IsCollision(r,qMatrix(i,:),faces,vertex,faceNormals,false);
-    r.model.animate(qMatrix(i,:));
-end
-
-
-
-
-
-function result = IsCollision(r,qMatrix,faces,vertex,faceNormals,returnOnceFound)
-if nargin < 6
-    returnOnceFound = true;
-end
-result = false;
-
-for qIndex = 1:size(qMatrix,1)
-    % Get the transform of every joint (i.e. start and end of every link)
-    tr = GetLinkPoses(qMatrix(qIndex,:), r);
-
-    % Go through each link and also each triangle face
-    for i = 1 : size(tr,3)-1    
-        for faceIndex = 1:size(faces,1)
-            vertOnPlane = vertex(faces(faceIndex,1)',:);
-            [intersectP,check] = LinePlaneIntersection(faceNormals(faceIndex,:),vertOnPlane,tr(1:3,4,i)',tr(1:3,4,i+1)'); 
-            if check == 1 && IsIntersectionPointInsideTriangle(intersectP,vertex(faces(faceIndex,:)',:))
-                plot3(intersectP(1),intersectP(2),intersectP(3),'g*');
-                display('Collision');
-                result = true;
-                if returnOnceFound
-                    return
-                end
-            end
-        end    
-    end
-end
-end
-
+disp("Mission Completed");
